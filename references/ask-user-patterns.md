@@ -64,9 +64,19 @@ Options:
 - Other (text)
 
 Q6 — "Must-haves and dealbreakers? (free text, can be 'none')"
+
+Q7 — "Output format(s)? (multi-select; Markdown is always generated)"
+Options:
+- Markdown report only (default — fastest)
+- + Executive deck (.pptx, 8–12 slides for stakeholder presentation)
+- + Polished PDF brief (single-file printable report)
+- + Stakeholder one-pager (1-page condensed, PDF or .md)
+- + Word .docx report (editable for procurement / legal review)
 ```
 
-Batch Q1–Q6 into a single AskUserQuestion call where possible. Each questions array entry corresponds to one question.
+Batch Q1–Q7 into a single AskUserQuestion call where possible. Each questions array entry corresponds to one question.
+
+**Format chaining**: when the user selects formats beyond Markdown, step 8 calls the appropriate downstream skill — `anthropic-skills:pptx` for deck, `anthropic-skills:pdf` for PDF, `anthropic-skills:docx` for Word. See `references/output-formats.md` for the exact chain.
 
 ## Step 5 — Compliance follow-up (only if needed)
 

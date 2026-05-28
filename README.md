@@ -21,7 +21,8 @@
 - **Chooses a decision method** that matches the purchase: quick weighted scoring for routine, full weighted matrix for leverage, **AHP** or **Pugh matrix** for strategic purchases.
 - **Stress-tests the decision** with a Klein-style **pre-mortem** and a threshold-based **cooling-off pause**.
 - **Plans the lifecycle** post-purchase: receive + inspect, warranty registration deadline, day-1 firmware/secure setup, recall monitoring, maintenance schedule, spare-parts stocking, end-of-life resale / recycle.
-- **Outputs a structured decision memo** with full audit trail of sources at `tasks/research/<slug>.md`.
+- **Outputs a structured decision memo** with full audit trail of sources at `tasks/research/<slug>.md`. Optionally also emits **presentation-ready formats** — executive deck (.pptx), polished PDF brief, stakeholder one-pager, or Word .docx — by chaining to the Anthropic `anthropic-skills:pptx / pdf / docx` skills.
+- **Token-efficient by design** — progressive disclosure + criteria-side caching (self-feeding) + no-re-ask auto-extraction. Saves ~70–80% of tokens and web calls vs naive research, especially across repeat sessions in the same category. See [docs/TOKEN_EFFICIENCY.md](docs/TOKEN_EFFICIENCY.md).
 
 ## Why use this instead of "asking Claude"
 
@@ -39,6 +40,8 @@
 | Anglo-centric | Region-neutral; works for US, EU, UK, CA, AU, JP, IN, BR, MENA, and any country |
 | Personal use only | **B2C and B2B modes** — RFI/RFP/RFQ flow for company procurement |
 | Static knowledge | **Self-feeding**: derives + saves a new domain pack on first encounter with a category |
+| High token cost per query | **Token-efficient by design**: progressive disclosure + self-feeding cache (criteria only, never prices) + no-re-ask auto-extraction → ~70–80% fewer tokens and web calls vs naive use across repeat sessions ([details](docs/TOKEN_EFFICIENCY.md)) |
+| Markdown report only | **Multi-format output**: Markdown (default) + executive deck (.pptx) + PDF brief + one-pager + Word .docx, all chained via `anthropic-skills:pptx/pdf/docx` |
 
 ## Quickstart
 
@@ -120,6 +123,37 @@ The same pipeline serves both personal buyers and corporate procurement. See [re
 
 - **B2C**: cooling-off pause based on income threshold; consumer-protection law for returns; personal warranty + insurance considerations.
 - **B2B**: formal **RFI → RFP → RFQ** process; multi-stakeholder requirements (IT + Finance + Security + Legal + end-user); SOC 2 / ISO 27001 / DPA / BAA validation; AHP for strategic vendor selection; implementation + change-management costs in TCO; approval-chain checklist replacing cooling-off.
+
+## Token efficiency
+
+One of the strongest reasons to use this skill over asking Claude directly: **structural token efficiency that compounds across sessions**.
+
+- **Progressive disclosure** — `SKILL.md` is ~180 lines; the 30+ reference modules load only when relevant. A routine-class run pulls 3 files into context; a strategic-class run pulls 6.
+- **Self-feeding (criteria-side caching)** — first encounter with an unknown category runs a one-time deep search (~20–30 web calls across 8 categories); the result is saved as a domain pack with `confidence: medium`. Subsequent runs on the same category cost **zero web calls for criteria research** — only live price discovery + availability is re-fetched.
+- **Auto-extraction** — the skill scans the working directory for existing context (gear lists, prior quotes, prior research) before asking the user anything. Repeated research in the same domain compounds.
+- **Compressed report template** — tables instead of paragraphs; casual mode condenses sections; the canonical Markdown is dense but scannable.
+
+**What we cache vs what stays live** (this distinction is intentional):
+
+| Cached forever (~0 web cost / future run) | Re-fetched every query (always live) |
+|---|---|
+| Research dimensions + standards + compatibility axes | Current prices |
+| Certification marks + regulatory bodies per region | Stock / availability |
+| Brand landscape + authorized-distribution patterns | Active promos / discounts |
+| Common pitfalls + failure modes | Fair-price band (calculated per query) |
+| Repairability + EOL norms | Recent recalls / vendor news / FX rates |
+
+Caching prices would be a feature anti-pattern — stale prices mislead buyers. The cache is for **how to evaluate this category** (stable). Live re-fetch is for **what it costs today** (dynamic).
+
+**Rough numbers** (illustrative, varies by category):
+
+| Scenario | Input tokens | Web calls |
+|---|---|---|
+| Naive "Claude, research X" | 40–60k | 20–60 |
+| This skill, first encounter unknown domain | 25–35k | 20–30 (deep search) + 5–10 (live prices) |
+| This skill, subsequent encounter same domain | 8–15k | 3–8 (prices only) |
+
+Across 10 runs on the same category, the skill saves ~70–80% of tokens and web calls vs naive use. Full details + verification recipe in [docs/TOKEN_EFFICIENCY.md](docs/TOKEN_EFFICIENCY.md).
 
 ## Example outputs
 

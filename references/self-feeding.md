@@ -1,45 +1,61 @@
 # Self-feeding: skill learns its own domain packs over time
 
-The skill starts with a finite set of `domain-<name>.md` packs. Every time it researches a category that doesn't have a pack, it derives the missing dimensions via web search (per `domain-unknown.md`). **Self-feeding** means: those derived dimensions are saved back to disk as a new `domain-<name>.md`, so future runs on that category benefit from the prior work.
+The skill starts with a finite set of `domain-<name>.md` packs. Every time it researches a category that doesn't have a pack, it runs an **8-category deep search** (~20–30 web calls) and saves the result as a new `domain-<name>.md`. **Self-feeding** means future runs on that category reuse the saved pack and skip dimension research entirely.
 
 This turns the skill into a knowledge base that grows with use — without any human-author intervention required.
+
+## What we cache vs what stays live
+
+This is the most important distinction:
+
+- **Cached (saved to pack, ~zero web cost per future run)**: research dimensions, standards & compatibility axes, certification marks, brand landscape per region, common pitfalls, regulatory bodies, repairability norms, trusted source URLs. **This is the criteria-side knowledge — the stable "how do you evaluate this category" content.**
+- **Live (re-fetched every query)**: current prices, stock, active promos, fair-price band, recent recalls, vendor news, FX rates. **This is the dynamic data — caching it would be a feature anti-pattern because stale prices mislead buyers.**
+
+The skill never goes back to the internet to **re-derive criteria** for a known domain. It always goes back to the internet for **current pricing and availability**, every query. Both are intentional.
 
 ## Lifecycle of an auto-generated domain pack
 
 ```
 1. First run on unknown category X
-   → derive dimensions via 3 WebSearches (domain-unknown.md)
-   → run the full pipeline on the derived dimensions
-   → SAVE derived dimensions to references/domain-<X>.md with auto-generated marker
+   → trigger 8-category DEEP SEARCH (~20–30 web calls; criteria-side only)
+   → SAVE derived criteria/standards/brands/pitfalls to references/domain-<X>.md
+     with confidence: medium + deep-search-completed: true
+   → also run live price discovery (step 6) for this query
    → write report to tasks/research/
 
-2. Second run on same category X (could be days/weeks later)
-   → SKILL.md domain-detection table now matches → loads references/domain-<X>.md
-   → no WebSearch needed for dimensions
-   → run full pipeline using saved pack
-   → if pipeline surfaces new info worth saving, append/refine the pack
+2. Second run on same category X (could be days/weeks/months later)
+   → domain-index.md matches → loads references/domain-<X>.md
+   → ZERO web calls for dimensions/standards/brands/pitfalls
+   → live price discovery + availability runs as normal
+   → if pipeline surfaces new criteria-side info, append to pack
 
 3. Nth run on category X
-   → pack now mature, stable; serves as if hand-authored
+   → pack mature; serves as if hand-authored
 
-4. Human review (optional but recommended every ~3 months)
-   → user opens references/ folder, reads auto-generated packs
-   → corrects / promotes / removes marker
+4. Human review (optional)
+   → user reads pack, makes corrections, removes the auto-generated banner,
+     sets confidence: high + human-reviewed: true
 ```
 
 ## What gets saved (and what doesn't)
 
-**Save**:
-- Research dimensions (functional, quality, economic, usage_fit) derived from WebSearch 1
-- Standards & compatibility axes derived from WebSearch 2
-- Common pitfalls / failure modes derived from WebSearch 3
-- Trusted sources actually used in the run (the URLs that paid off)
-- Domain detection keywords (slugs / synonyms the skill should match next time)
+**Save (cached forever, refreshed only every ~18 months)**:
+- Research dimensions (functional_specs, quality_signals, economic, usage_fit)
+- Standards & compatibility axes
+- Common pitfalls / failure modes
+- Brand landscape per region
+- Trusted sources for future verification + future price discovery
+- Domain detection keywords (synonyms the skill should match)
+- Regulatory bodies + certification marks for the category
+- Repairability + EOL norms
 
-**Do not save**:
-- Specific product candidates (those belong in `tasks/research/`, not the domain pack)
-- User-specific context (existing gear, budget — that's per-user, not per-domain)
-- Price data (changes constantly; per-run data lives in research reports)
+**Do not save (intentionally re-fetched every query)**:
+- Current prices, stock, promo discounts
+- Fair-price band (calculated per query from live data)
+- Recent recalls or vendor news
+- Specific product candidates (those live in `tasks/research/`, not the pack)
+- User-specific context (existing gear, budget — per-user, not per-domain)
+- FX rates
 
 ## File format for auto-generated packs
 
@@ -52,19 +68,23 @@ derived-from-query: "<user's original query>"
 first-run-date: 2026-05-28
 last-updated: 2026-05-28
 run-count: 1
-confidence: low
+confidence: medium
+deep-search-completed: true
+search-categories-covered: [buying-guides, standards-regulators, brand-landscape, pitfalls-failure-modes, repairability-eol, compliance-recall-registries, tco-drivers, long-term-reviews]
 sources-used:
   - https://...
   - https://...
+  - <~15–25 URLs from the 8 deep-search categories>
 human-reviewed: false
 ---
 
-# Domain: <Name> (auto-generated)
+# Domain: <Name> (auto-generated, deep search)
 
-> ⚠ **Auto-generated pack** — derived from web search on first encounter with this
-> category. Dimensions and standards may have gaps or inaccuracies. Treat as a
-> starting point; verify critical claims (compliance, standards, compat rules)
-> against authoritative sources before relying on them for purchase decisions.
+> ℹ **Auto-generated pack** — derived from a comprehensive 8-category deep search
+> on first encounter with this category. Treat as a working reference;
+> human review can promote to `confidence: high` and remove this banner.
+> For purchase decisions involving regulatory or safety claims, verify against
+> the sources listed at the bottom of this file.
 
 [rest of file follows the standard domain-pack template — see domain-bicycle.md
 or domain-pc.md as the canonical reference]
@@ -73,13 +93,13 @@ or domain-pc.md as the canonical reference]
 ## Confidence levels
 
 Track per pack:
-- **`low`** (first 1–2 runs) — derived from a few WebSearches; significant gaps possible
-- **`medium`** (3–5 runs OR explicit human review) — refined across multiple uses, edge cases surfaced
-- **`high`** (`human-reviewed: true` flag set by user) — verified by a human
+- **`low`** — derivation failed (deep search didn't complete cleanly); pack saved with user-supplied dimensions as a fallback. Report should warn user.
+- **`medium`** — deep search completed (default for auto-generated packs); or hand-authored without explicit review. Refined across uses.
+- **`high`** — `human-reviewed: true` flag set by user after review.
 
 The skill should:
-- Cite low-confidence packs with a warning in the report ("Note: domain pack for X is auto-generated, low-confidence; verify compatibility claims independently.")
-- Stop warning at medium / high confidence
+- Cite low-confidence packs with a warning in the report ("Note: domain pack for X is auto-generated and the deep search did not complete cleanly; verify critical claims independently.")
+- Treat medium and high confidence as equivalent for runtime decisions — no warning needed in reports.
 
 ## Update / refinement on subsequent runs
 
@@ -94,7 +114,8 @@ When the skill runs on an existing auto-generated pack:
    - A correction to an existing entry → **flag for review** (don't auto-overwrite; ambiguous)
 4. Increment `run-count`.
 5. Update `last-updated` date.
-6. After 3+ successful runs without contradiction → bump `confidence` from `low` to `medium`.
+6. Deep-search-completed packs start at `medium`; they don't auto-bump to `high` (that requires human review).
+7. If `last-updated` is > 18 months old, recommend re-running the deep search — standards and brand landscape drift over time.
 
 ## Promotion to hand-authored
 

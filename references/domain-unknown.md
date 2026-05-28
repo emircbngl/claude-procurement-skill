@@ -10,48 +10,93 @@ Step 1 maps the product to a domain by consulting `domain-index.md`. If no match
 
 Examples that hit this path on first encounter: drones, 3D printers, espresso machines (dedicated tier beyond small-appliance), watches, baby products, supplements, solar panels, niche professional gear.
 
-## Discovery workflow
+## Discovery workflow — DEEP SEARCH
 
-Run up to **3 WebSearch calls** to derive the category's dimensions, then save and proceed:
+Run a comprehensive **8-category deep search** (~20–30 WebSearch + WebFetch calls total) to capture the stable knowledge about this category so the saved pack is authoritative on first encounter. Subsequent runs on this category reuse the pack and skip dimension research entirely.
 
-### WebSearch 1: Buying guide
+**Critical scope clarification**: this deep search captures **criteria-side knowledge** only — what the category is, what specs matter, what standards apply, what brands exist, what fails. It does **NOT** capture prices, current stock, or current promos. Those are dynamic and would go stale immediately; step 6 (price discovery) re-runs live every query and is intentionally not cached.
 
-Query: `"<category> buying guide key specifications"` OR `"how to choose <category>"` OR `"<category> spec comparison"`.
+For each category below, run 1–3 WebSearch queries to identify the best sources, then WebFetch the top 3–5 authoritative sources for full content. Save every URL into the pack's `sources-used:` frontmatter.
 
-Goal: identify the **canonical research dimensions** for the category. Look for sources like Wirecutter, Consumer Reports, RTINGS, manufacturer "how to choose" pages, expert-domain sites.
+### Category 1: Buying guides + spec dimensions (3–5 sources)
 
-Extract:
-- 4–8 key functional specs experts use to differentiate products
-- Common use-case profiles (beginner / enthusiast / pro)
-- Tier breakpoints (entry / mid / premium / flagship) with typical price ranges
+Queries: `"<category> buying guide key specifications"`, `"how to choose <category>"`, `"<category> spec comparison expert review"`.
 
-### WebSearch 2: Compatibility / standards
+Target sources: Wirecutter, Consumer Reports, RTINGS, expert-domain sites (e.g., DPReview for cameras, Whole Latte Love for espresso), manufacturer "how to choose" pages, top-of-rank YouTube channels in the category.
 
-Query: `"<category> compatibility standards"` OR `"<category> connector types"` OR `"<category> interoperability"`.
+Extract: 4–8 key functional specs experts use to differentiate products; common use-case profiles (beginner / enthusiast / pro); tier breakpoints (entry / mid / premium / flagship) with typical price ranges (anchored, not current).
 
-Goal: identify what **standards / interop axes** matter. Look for:
-- Physical interfaces (mounts, connectors, cutouts)
-- Electrical / protocol standards (voltage, data, RF)
-- Ecosystem dependencies (proprietary platform vs open standard)
-- Required adapters / accessories
+### Category 2: Standards + regulatory bodies (2–4 sources)
 
-If a category has no notable compatibility axes (standalone product), note that and skip step 5's compatibility check.
+Queries: `"<category> compatibility standards"`, `"<category> connector types"`, `"<category> ISO IEC standard"`, `"<category> certification mark"`.
 
-### WebSearch 3: Reliability + common failure modes
+Target sources: ISO Online Browsing Platform, IEC, IEEE, EN/DIN standards, manufacturer compatibility charts, industry-body publications.
 
-Query: `"<category> common problems"` OR `"<category> reliability comparison brands"` OR `"<category> long-term review"`.
+Extract: physical interfaces (mounts, connectors, cutouts); electrical / protocol standards; ecosystem dependencies (proprietary vs open); required adapters; mandatory certification marks per major region.
 
-Goal: identify common failure modes (input to FMEA-lite in step 7) and brand-reliability signals.
+If a category has no notable compatibility axes (standalone product), explicitly note "no compatibility axes — skip step 5 compat matrix" in the saved pack.
+
+### Category 3: Brand landscape across regions (3–5 sources)
+
+Queries: `"<category> best brands 2026"`, `"<category> top manufacturers"`, `"<category> brands US EU UK"`, `"<category> authorized dealer"`.
+
+Target sources: market-share reports, retailer brand-category landing pages, professional society recommendations, region-specific best-of lists.
+
+Extract: 5–10 dominant brands globally; per-region distinction (which brands strong where); authorized-distribution patterns (direct-to-consumer vs dealer network); B2C vs B2B brand split if applicable.
+
+### Category 4: Common pitfalls + failure modes (2–3 sources)
+
+Queries: `"<category> common problems"`, `"<category> worst mistakes buying"`, `"<category> what to avoid"`, `"<category> reliability comparison"`.
+
+Target sources: forum threads (Reddit, specialist forums), long-term-ownership reviews, repair-shop YouTube content, consumer-protection databases.
+
+Extract: top 8–12 failure modes / pitfalls (input to FMEA-lite in step 7); brand-reliability signals; known industry-wide design flaws or recall patterns.
+
+### Category 5: Repairability + EOL (1–2 sources)
+
+Queries: `"<category> repairability"`, `"<category> right to repair"`, `"<category> end of life recycling"`.
+
+Target sources: iFixit, EU repairability index documentation, manufacturer take-back / recycling programs.
+
+Extract: typical repairability stance (modular vs sealed); iFixit-style scores if published for the category; manufacturer right-to-repair posture; standard EOL routes (resale, trade-in, recycle).
+
+### Category 6: Compliance / safety / recall registries (1–2 sources)
+
+Queries: `"<category> recall registry"`, `"<category> safety certification"`, `"<category> regulatory authority"`.
+
+Target sources: CPSC SaferProducts.gov, EU RAPEX Safety Gate, MHRA / TGA / Health Canada / regional regulators, brand-specific recall pages.
+
+Extract: per-region recall-monitoring URLs; any high-profile recent recalls in the category; safety-cert hierarchy specific to the category (e.g., IEC 60601 for medical electrical).
+
+### Category 7: TCO drivers — consumables, energy, service (1–2 sources)
+
+Queries: `"<category> consumables cost"`, `"<category> energy consumption running cost"`, `"<category> maintenance schedule"`, `"<category> service intervals"`.
+
+Target sources: manufacturer service manuals, energy-database entries (Energy Star, EPREL), specialist sites that publish TCO breakdowns.
+
+Extract: consumable list with typical replacement cadence; energy spec range (watts, kWh/yr); maintenance schedule template; expected lifespan in years.
+
+### Category 8: Reviews + long-term ownership signals (2–3 sources)
+
+Queries: `"<category> long term review"`, `"<category> after 2 years"`, `"<category> buyitforlife"`, `"<category> reliability long term"`.
+
+Target sources: r/BuyItForLife, multi-year YouTube revisit videos, professional reviewers' long-term updates, specialist forums.
+
+Extract: which brands hold up at 2+ years; which sub-categories have reliability problems; aesthetic / ergonomic regret patterns reported by long-term owners.
+
+---
+
+After all 8 categories complete (~20–30 calls), proceed to save the pack with `confidence: medium` (not low — deep search done).
 
 ## Save the derived pack to disk (self-feeding)
 
-**This is the new step.** After WebSearches 1–3 yield enough information:
+After all 8 deep-search categories complete:
 
 1. Compute a slug from the category: `<category>` → kebab-case (e.g., "espresso machine" → `espresso-machine`).
 2. Check `domain-index.md` for keyword overlap with existing packs (avoid duplicates).
 3. Write the new pack to `references/domain-<slug>.md` using the auto-generated template (below).
-4. Append a row to `references/domain-index.md` with the new pack's keywords + `status: auto-gen, confidence: low`.
-5. Note in the research report: "Created new domain pack: `references/domain-<slug>.md` (auto-generated, low-confidence). Review before treating as authoritative."
+4. Append a row to `references/domain-index.md` with the new pack's keywords + `status: auto-gen, confidence: medium`.
+5. Note in the research report: "Created new domain pack: `references/domain-<slug>.md` (auto-generated via deep search, confidence: medium). Subsequent runs on this category will skip dimension research and use the saved pack."
 
 ### Auto-generated pack template
 
@@ -62,7 +107,17 @@ derived-from-query: "<verbatim user query that triggered this>"
 first-run-date: <YYYY-MM-DD>
 last-updated: <YYYY-MM-DD>
 run-count: 1
-confidence: low
+confidence: medium
+deep-search-completed: true
+search-categories-covered:
+  - buying-guides
+  - standards-regulators
+  - brand-landscape
+  - pitfalls-failure-modes
+  - repairability-eol
+  - compliance-recall-registries
+  - tco-drivers
+  - long-term-reviews
 sources-used:
   - <url 1>
   - <url 2>
@@ -70,12 +125,13 @@ sources-used:
 human-reviewed: false
 ---
 
-# Domain: <Category Name> (auto-generated)
+# Domain: <Category Name> (auto-generated, deep search)
 
-> ⚠ **Auto-generated pack** — derived from web search on first encounter with this
-> category. Dimensions and standards may have gaps or inaccuracies. Treat as a
-> starting point; verify critical claims (compliance, standards, compat rules)
-> against authoritative sources before relying on them for purchase decisions.
+> ℹ **Auto-generated pack** — derived from a comprehensive 8-category deep search
+> on first encounter with this category. Treat as a working reference;
+> human review can promote to `confidence: high` and remove this banner.
+> For purchase decisions involving regulatory or safety claims, verify against
+> the sources listed at the bottom of this file.
 
 ## Research dimensions
 - functional_specs: [list extracted from WebSearch 1]
@@ -103,7 +159,7 @@ human-reviewed: false
 
 ## Trusted sources for web fallback
 
-[the actual URLs surfaced in WebSearches 1–3 that gave useful info]
+[the actual URLs surfaced across the 8 deep-search categories — typically 15–25 URLs]
 ```
 
 ## Standard pipeline still runs
@@ -111,8 +167,8 @@ human-reviewed: false
 Once dimensions are derived AND saved, the rest of the workflow proceeds normally:
 - Step 4 (requirements) uses the derived dimensions to ask the right questions.
 - Step 5 (RFI + compliance) uses the derived standards for compliance checks.
-- Step 6 (price discovery) uses category-appropriate sources.
-- Step 7 (TCO) uses derived consumables data.
+- **Step 6 (price discovery) runs live — uses the derived `sources-used` list for which aggregators to scan, but pulls actual prices fresh from those sources every query.** Prices are intentionally never cached.
+- Step 7 (TCO) uses derived consumables data + live price discovery.
 - Steps 8–11 proceed standard.
 
 The research report is written to `tasks/research/<slug>.md` as usual. The new domain pack lives at `references/domain-<slug>.md`.
@@ -130,15 +186,16 @@ If the skill runs on the same category **again**:
    - A new authoritative source → **append** to sources list.
    - A correction to an existing entry → **flag for review** (don't auto-overwrite; ambiguous).
 5. Increment `run-count` in the pack's frontmatter; update `last-updated`.
-6. After 3+ successful runs without contradiction → bump `confidence` from `low` to `medium`.
+6. Confidence stays at **medium** after deep search; human review promotes it to **high** + sets `human-reviewed: true`.
+7. If `last-updated` is > 18 months old, recommend re-running the deep search — standards and brand landscape drift over time.
 
 ## Failure mode
 
-If 3 WebSearches don't yield clear dimensions:
+If the 8-category deep search doesn't yield clear results (e.g., extremely niche category, no authoritative sources online):
 - Surface the partial findings to the user.
-- Ask via AskUserQuestion: "I couldn't auto-derive the key research dimensions for `<category>`. Can you tell me the 3–5 specs that matter most to you for this product?"
-- Treat user's answer as the dimensions.
-- Still **save** the pack (with `confidence: low` + user-provided dimensions marked); future runs benefit.
+- Ask via AskUserQuestion: "I couldn't auto-derive complete information for `<category>`. Can you tell me the 3–5 specs that matter most to you for this product?"
+- Treat user's answer as supplementary dimensions.
+- Still **save** the pack with `confidence: low` (not medium — deep search did not complete) and `deep-search-completed: false` in frontmatter; future runs benefit and may trigger re-derivation.
 - Continue the pipeline.
 
 ## Avoiding duplicate / near-duplicate packs

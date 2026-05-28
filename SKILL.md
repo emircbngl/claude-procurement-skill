@@ -57,6 +57,7 @@ The skill needs (or auto-extracts, or asks for):
 - TCO horizon (typically 3 or 5 years; B2B often 5+)
 - ESG weighting (optional)
 - Cooling-off threshold (household-rule for when to enforce a sleep-on-it pause); for B2B replaced by formal approval chain
+- **Output format(s)** — Markdown (always), optionally + Executive deck (.pptx) + PDF brief + One-pager + Word .docx; see `references/output-formats.md`
 
 ## Workflow — the 11-step procurement process
 
@@ -70,13 +71,13 @@ Also at this step, infer or ask **mode**: B2C (default for personal language) or
 
 **1.5. Kraljic classification** — see `references/kraljic-classification.md`. Place purchase on supply-risk × importance matrix: routine / leverage / bottleneck / strategic. The classification dictates how deep the rest of the steps go.
 
-**2. Load playbooks.** Read `references/procurement-playbook.md` + `references/universal-dimensions.md` + the matched `references/domain-<name>.md` from step 1. If mode = B2B, also read `references/b2b-modifiers.md`. If domain was `unknown`, follow `references/domain-unknown.md` to derive via ≤3 WebSearch calls AND **save the derived pack** to `references/domain-<slug>.md` + append entry to `domain-index.md` (self-feeding — see `references/self-feeding.md`). Cache for this run.
+**2. Load playbooks.** Read `references/procurement-playbook.md` + `references/universal-dimensions.md` + the matched `references/domain-<name>.md` from step 1. If mode = B2B, also read `references/b2b-modifiers.md`. If domain was `unknown`, follow `references/domain-unknown.md` to run an **8-category deep search (~20–30 web calls on criteria-side knowledge only)** AND **save the derived pack** to `references/domain-<slug>.md` with `confidence: medium` + append entry to `domain-index.md` (self-feeding — see `references/self-feeding.md`). Note: prices and current availability are intentionally never cached — step 6 always runs live. Cache derived dimensions for this run.
 
 **3. Auto-extract context.** Glob `**/*.md`, `**/*.txt`, `**/notes/**` + loose files in `.`. Grep for product names, model numbers, existing gear, prior quotes, must-haves/dealbreakers, prior research in `tasks/research/`. Build `known_context`. **Never re-ask for anything already found.**
 
 **3.5. Option-space analysis** — see `references/option-space.md`. Test make-vs-buy and build/buy/rent/subscribe before assuming the answer is "purchase".
 
-**4. Formalize requirements** — see `references/requirements-framework.md`. Build the requirements doc (must-have/nice-to-have weighted/dealbreaker). Ask via AskUserQuestion only for what's missing — single batched call. Always ask region+currency, audience level, Kraljic-derived importance.
+**4. Formalize requirements** — see `references/requirements-framework.md`. Build the requirements doc (must-have/nice-to-have weighted/dealbreaker). Ask via AskUserQuestion only for what's missing — single batched call. Always ask region+currency, audience level, Kraljic-derived importance, **and output format(s)** (Markdown default; optional .pptx / PDF / one-pager / .docx — see `references/output-formats.md`).
 
 ### Sourcing & validation
 
@@ -89,6 +90,8 @@ Also at this step, infer or ask **mode**: B2C (default for personal language) or
 ### Decision & commit
 
 **8. Decide & document** — see `references/decision-frameworks.md`. Method scales with Kraljic class: routine → quick weighted; leverage → full weighted; bottleneck → risk-adjusted; strategic → AHP or Pugh. Render `references/report-template.md` into `tasks/research/<slug>.md`. Slug = kebab-case `<category>-<keyword>`. **If exists**: append `## Re-evaluation <YYYY-MM-DD>`. Auto-create `tasks/research/`.
+
+After the canonical Markdown is written, **chain to additional output formats** if the user requested any in step 4 — see `references/output-formats.md`. The skill calls `anthropic-skills:pptx` for executive decks, `anthropic-skills:pdf` for PDF briefs and PDF one-pagers, and `anthropic-skills:docx` for Word reports. All formats land in `tasks/research/<slug>.<ext>` alongside the Markdown.
 
 **8.5. Pre-mortem + devil's advocate** — see `references/pre-commit-checks.md`. Klein's prospective hindsight: top-3 regret scenarios + mitigations. Inversion check.
 

@@ -196,3 +196,44 @@ Either way: the analysis runs in full. Only reporting density changes.
 - Examples: `bicycle-gravel-upgrade`, `pc-rtx-5070-build`, `headphones-anc-sony-bose`, `espresso-machine-prosumer-home`.
 - If file exists: append `## Re-evaluation <YYYY-MM-DD>` section, do NOT overwrite.
 - Auto-create `tasks/research/` if missing.
+
+## Multi-format output
+
+The Markdown above is the **canonical** report. When the user requested additional formats in step 4 (executive deck, PDF brief, one-pager, Word doc), step 8 chains the appropriate downstream skill — see `references/output-formats.md` for the chain mechanics and slide / page structures.
+
+## One-pager template
+
+When the user requests a one-pager (Markdown or PDF), generate this strict 1-page condensed version alongside the full report. Path: `tasks/research/<slug>-one-pager.md` (and optionally `.pdf` via `anthropic-skills:pdf`).
+
+```markdown
+# <Product / Research Question> — Decision one-pager
+> <date> · <region> · Audience: <casual|pro> · Kraljic: <class>
+
+## Verdict
+**<one-sentence recommendation>** — buy <primary pick> at **<target price>** from **<best channel>**.
+
+## Why (top 3)
+1. <one-line reason tied to weighted scoring / TCO / fair-price band>
+2. <one-line reason>
+3. <one-line reason>
+
+## Top risks
+1. <risk> → <mitigation>
+2. <risk> → <mitigation>
+3. <risk> → <mitigation>
+
+## Walk-away price
+**<amount>** — above this, defer to <next discount window> or reconsider runner-up <name>.
+
+## Next step
+<single dated action — e.g., "Pre-order at <channel> by <date>" or "Re-confirm after <date+72h>">
+
+## Sources (top 3)
+- <URL 1>
+- <URL 2>
+- <URL 3>
+
+*Full report: `tasks/research/<slug>.md`*
+```
+
+**Constraint**: this must fit on a single A4/Letter page when rendered to PDF. If user has `audience=pro` and the full report has many sources, the one-pager still cites only the top 3 by relevance.
