@@ -233,6 +233,12 @@ PRs welcome, especially for new domain packs.
 - **Bug reports**: open an issue with the user query, expected behavior, actual behavior, and which `references/` file is implicated.
 - **Auto-generated pack review**: open a PR that promotes an existing auto-generated pack to `human-reviewed`, with any corrections or additions surfaced from real-world use.
 
+## Star history
+
+<a href="https://star-history.com/#emircbngl/claude-procurement-skill&Date">
+  <img src="https://api.star-history.com/svg?repos=emircbngl/claude-procurement-skill&type=Date" alt="Star history chart for emircbngl/claude-procurement-skill" width="640">
+</a>
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
