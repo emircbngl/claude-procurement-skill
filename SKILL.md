@@ -75,7 +75,7 @@ Also at this step, infer or ask **mode**: B2C (default for personal language) or
 - **Path A (preferred when available)**: delegate to the `deep-research` skill via the Skill tool with a composite 8-category prompt; parse its cited synthesis into the domain-pack template.
 - **Path B (fallback)**: run the inline 8-category deep search (~20–30 web calls) with **parallel-batched WebSearch/WebFetch calls per category** (multiple tool calls per turn).
 
-Either path saves the result as `references/domain-<slug>.md` with `confidence: medium` + appends to `domain-index.md` (self-feeding — see `references/self-feeding.md`). Note: prices and current availability are intentionally never cached — step 6 always runs live. Cache derived dimensions for this run.
+Either path then: (a) **adversarially verifies** the high-stakes dimensions (`compatibility`, `standards-regulators`, `compliance-recall`) per `references/adversarial-verify.md`; (b) **scores per-dimension confidence** and computes the aggregate per `references/schemas.md` §3; (c) saves the result as `references/domain-<slug>.md` with the full `dimension-confidence` + `verification` frontmatter + appends to `domain-index.md` (self-feeding — see `references/self-feeding.md`). Run the `schemas.md` self-validation checklist before writing. Note: prices and current availability are intentionally never cached — step 6 always runs live. Cache derived dimensions for this run.
 
 **3. Auto-extract context.** Glob `**/*.md`, `**/*.txt`, `**/notes/**` + loose files in `.`. Grep for product names, model numbers, existing gear, prior quotes, must-haves/dealbreakers, prior research in `tasks/research/`. Build `known_context`. **Never re-ask for anything already found.**
 
@@ -85,7 +85,7 @@ Either path saves the result as `references/domain-<slug>.md` with `confidence: 
 
 ### Sourcing & validation
 
-**5. RFI → shortlist + compliance** — see `references/compliance-checks.md` + `references/compatibility-playbook.md`. Build 2–5 candidate SKUs. Verify: certification marks (CE/FCC/UL/RoHS/CCC/Energy Star/EPREL), authorized-dealer/SKU verification, return policy, IoT cyber/privacy (smart devices), counterfeit risk, compatibility with user's existing gear. Disqualify failures + document reasons.
+**5. RFI → shortlist + compliance** — see `references/compliance-checks.md` + `references/compatibility-playbook.md`. Build 2–5 candidate SKUs. Verify: certification marks (CE/FCC/UL/RoHS/CCC/Energy Star/EPREL), authorized-dealer/SKU verification, return policy, IoT cyber/privacy (smart devices), counterfeit risk, compatibility with user's existing gear. Disqualify failures + document reasons. **For strategic-class purchases, adversarially verify each compatibility-matrix row and each B2B compliance attestation** per `references/adversarial-verify.md` — a wrong compat/compliance call is the most expensive mistake to ship.
 
 **6. RFP → RFQ + price discovery** — see `references/price-discovery.md`. For each surviving candidate, run MSRP capture → aggregator scan (region-appropriate: Google Shopping / PriceSpy / Idealo / Geizhals / Newegg / PCPartPicker / Kakaku / regional equivalents — see the table in `price-discovery.md`) → price history (camelcamelcamel / Keepa) → used/refurb floor (eBay sold, manufacturer refurb) → peer-tier benchmark → cross-border landed-cost math if relevant → red-flag pass → synthesize **fair-price band** (aspirational / target / walk-away).
 
@@ -139,14 +139,14 @@ Matching rule: lowercase user query → scan `domain-index.md` keywords → long
 
 The skill **grows its own domain-pack library**. On encountering a category with no matching pack:
 
-1. `domain-unknown.md` derives dimensions via ≤3 WebSearches.
-2. Result is saved as a new `references/domain-<slug>.md` with `status: auto-generated, confidence: low`.
-3. A row is appended to `references/domain-index.md`.
-4. Future runs on the same category use the saved pack (no re-derivation).
-5. After 3+ runs without contradiction, the skill auto-bumps `confidence: medium`.
-6. A user reviewing the pack can promote it to `confidence: high, status: human-reviewed`.
+1. `domain-unknown.md` acquires criteria-side knowledge via an 8-category deep search (Path A: delegate to `deep-research`; Path B: inline parallel-batched search).
+2. High-stakes dimensions are adversarially verified; each of 9 dimensions is scored `low`/`medium`/`high` and the aggregate is computed (`references/schemas.md` §3).
+3. Result is saved as a new `references/domain-<slug>.md` with the full `dimension-confidence` + `verification` frontmatter (`status: auto-generated`, aggregate `confidence`).
+4. A row is appended to `references/domain-index.md`.
+5. Future runs on the same category reuse the saved pack — zero web calls for criteria; only live price discovery runs.
+6. A user reviewing the pack can promote it to `confidence: high, human-reviewed: true`.
 
-See `references/self-feeding.md` for the full design (file format, refinement on subsequent runs, duplicate avoidance, opt-out).
+See `references/self-feeding.md` for the full design, `references/schemas.md` for the confidence model, `references/adversarial-verify.md` for the verification methodology.
 
 The skill should mention to the user when it has created or updated a domain pack — this is part of the value delivered.
 
@@ -169,10 +169,19 @@ Asked once in step 4. The underlying procurement analysis runs in full regardles
 
 See `references/information-sources.md` for the canonical source list — cross-region (camelcamelcamel, Keepa, PCPartPicker, eBay sold, MPB/KEH), regional aggregators (US / EU / UK / CA / AU / JP / IN / BR / MENA / TR / others), reviews (RTINGS, Wirecutter, Consumer Reports, r/BuyItForLife, etc.), compliance (EPREL, CPSC SaferProducts.gov, EU RAPEX, MHRA, TGA, Health Canada, EUDAMED, etc.), repairability (iFixit, EU repairability index), and customs (USITC, TARIC, gov.uk Trade Tariff, CBSA, ABF, plus national equivalents).
 
+## Quality & verification
+
+The skill's trust model is explicit, not implicit — see `references/schemas.md` (canonical shapes + per-dimension confidence model) and `references/adversarial-verify.md` (refutation methodology).
+
+- **Per-dimension confidence**: auto-generated domain packs score each of 9 dimensions `low`/`medium`/`high` rather than a single blanket label; the aggregate is computed, not guessed. Hand-authored packs are treated as `high` throughout.
+- **Adversarial verification**: high-stakes claims (compatibility, certification, recall, B2B compliance) must survive an independent refutation pass before they're trusted. Default verdict is `unverified`, never `verified`.
+- **Report honesty**: any `refuted`/`unverified` high-stakes claim is surfaced in Section 16 (Open questions), never stated as settled fact. If a pack's high-stakes dimension is `low`, the report names it specifically.
+
 ## Failure modes
 
-- **Domain unknown after ≤3 WebSearches** → ask user to define the key research dimensions manually.
-- **Web unreachable** → fall back to user knowledge + local domain pack; explicitly mark price/risk data as "unverified".
+- **Domain unknown** → run the 8-category deep search (`references/domain-unknown.md`); if it can't complete cleanly, save a `confidence: low` pack with `deep-search-completed: false` and ask the user to supply the key dimensions.
+- **Adversarial verification can't corroborate a high-stakes claim** → mark it `unverified`, cap that dimension at `low`, surface it in the report's Open Questions. Never upgrade an unverified claim to settled fact.
+- **Web unreachable** → fall back to user knowledge + local domain pack; explicitly mark price/risk data + all verifications as "unverified".
 - **User can't answer required input** → mark requirement as `unspecified`, downgrade scoring confidence, surface in Open Questions.
 - **No candidate passes compliance** → surface the failure modes, ask user whether to relax must-haves or expand budget.
 - **No reliable price data** → output MSRP only with an explicit "fair-price band could not be established" note.

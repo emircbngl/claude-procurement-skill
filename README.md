@@ -23,6 +23,7 @@
 - **Plans the lifecycle** post-purchase: receive + inspect, warranty registration deadline, day-1 firmware/secure setup, recall monitoring, maintenance schedule, spare-parts stocking, end-of-life resale / recycle.
 - **Outputs a structured decision memo** with full audit trail of sources at `tasks/research/<slug>.md`. Optionally also emits **presentation-ready formats** — executive deck (.pptx), polished PDF brief, stakeholder one-pager, or Word .docx — by chaining to the Anthropic `anthropic-skills:pptx / pdf / docx` skills.
 - **Token-efficient by design** — progressive disclosure + criteria-side caching (self-feeding) + no-re-ask auto-extraction. Saves ~70–80% of tokens and web calls vs naive research, especially across repeat sessions in the same category. See [docs/TOKEN_EFFICIENCY.md](docs/TOKEN_EFFICIENCY.md).
+- **Calibrated confidence, not vibes** — auto-generated domain packs are adversarially verified on high-stakes claims and scored per-dimension (9 dimensions, low/medium/high). The report tells you exactly which data is solid and which to double-check. See [docs/QUALITY_MODEL.md](docs/QUALITY_MODEL.md).
 
 ## Why use this instead of "asking Claude"
 
@@ -34,6 +35,8 @@
 | Generic recommendation | Weighted scoring or AHP / Pugh decision matrix tied to your requirements |
 | No compatibility check | Standards matrix vs. your existing gear |
 | No risk framework | FMEA-lite, vendor risk, single-source-of-failure |
+| Confident-sounding but unchecked | **Adversarial verification** — high-stakes compatibility / compliance claims must survive an independent refutation pass before they're trusted ([details](docs/QUALITY_MODEL.md)) |
+| "Trust me" confidence | **Per-dimension confidence scoring** — 9 dimensions each scored low/medium/high, aggregate computed not guessed; the report names exactly which data is weak |
 | No audit trail | Cited sources for every claim, written to disk |
 | No follow-through | Lifecycle plan with dated warranty / recall / maintenance / EOL checklist |
 | One-size-fits-all | **Kraljic-driven depth**: routine gets a shortcut, strategic gets the full memo |
@@ -155,6 +158,18 @@ Caching prices would be a feature anti-pattern — stale prices mislead buyers. 
 
 Across 10 runs on the same category, the skill saves ~70–80% of tokens and web calls vs naive use. Full details + verification recipe in [docs/TOKEN_EFFICIENCY.md](docs/TOKEN_EFFICIENCY.md).
 
+## Quality & verification
+
+The skill's trust model is explicit and machine-checkable, built on three interlocking mechanisms ([full writeup](docs/QUALITY_MODEL.md)):
+
+1. **Structured schemas** ([`references/schemas.md`](references/schemas.md)) — every domain pack, report, and in-run object has a defined shape that the skill self-validates before writing. Anti-drift: the 50th auto-generated pack has the same shape as the 1st.
+
+2. **Adversarial verification** ([`references/adversarial-verify.md`](references/adversarial-verify.md)) — high-stakes claims (compatibility, certification, recall status, B2B compliance) must survive an **independent refutation pass** before they're trusted. The verifier actively searches for evidence the claim is *false*, uses independent sources, applies four lenses (correctness / conditionality / recency / region), and **defaults to `unverified`, never `verified`**. Prefers delegating to the `deep-research` skill; falls back to an inline skeptic pass.
+
+3. **Per-dimension confidence** ([`references/schemas.md`](references/schemas.md) §3) — instead of one blanket label, each of 9 dimensions (standards, compatibility, compliance, brand landscape, pitfalls, repairability, TCO drivers, reviews, buying guides) is scored `low`/`medium`/`high`. The aggregate is **computed** by a weighted-floor rule, not guessed: a pack can't be "high" while any safety/interop dimension is weak. The report then names exactly which data is solid and which to double-check.
+
+What this buys you: when the skill says a compatibility verdict is `verified`, an independent pass tried to refute it and failed. When it says a dimension is `low`, it's flagging genuine uncertainty — not hiding it behind a confident tone. Calibration over vibes.
+
 ## Example outputs
 
 Three fully worked sample reports demonstrate the skill across modes and Kraljic classes:
@@ -203,7 +218,7 @@ claude-procurement-skill/
 │   ├── universal-dimensions.md        # Domain-agnostic evaluation criteria
 │   ├── requirements-framework.md      # Must-have / nice-to-have / dealbreaker
 │   ├── compliance-checks.md           # Cert marks, authorized dealer, IoT, counterfeit
-│   ├── compatibility-playbook.md      # Standards matrix methodology
+│   ├── compatibility-playbook.md      # Standards matrix methodology + adversarial verify
 │   ├── price-discovery.md             # 8 price tiers, fair-price band, RFI/RFP/RFQ
 │   ├── tco-and-risk.md                # Landed-cost TCO + FMEA-lite + vendor risk
 │   ├── sourcing-and-negotiation.md    # Negotiation tactic playbook
@@ -211,13 +226,19 @@ claude-procurement-skill/
 │   ├── pre-commit-checks.md           # Pre-mortem + devil's advocate + cooling-off
 │   ├── lifecycle-management.md        # Receive / register / monitor / maintain / EOL
 │   ├── information-sources.md         # Cross-region source catalog
-│   ├── self-feeding.md                # How auto-generated packs work
+│   ├── self-feeding.md                # How auto-generated packs work + confidence model
+│   ├── schemas.md                     # Canonical shapes + per-dimension confidence model
+│   ├── adversarial-verify.md          # Refutation methodology for high-stakes claims
+│   ├── output-formats.md              # Markdown / .pptx / PDF / one-pager / .docx chains
 │   ├── b2b-modifiers.md               # B2C / B2B overlay
 │   ├── domain-index.md                # Registry of all domain packs
 │   ├── ask-user-patterns.md           # AskUserQuestion question banks
-│   ├── report-template.md             # Markdown skeleton for outputs
-│   ├── domain-unknown.md              # Fallback + self-feeding workflow
+│   ├── report-template.md            # Markdown skeleton for outputs + one-pager template
+│   ├── domain-unknown.md              # Deep-search fallback + self-feeding workflow
 │   └── domain-<13 packs>.md           # Bicycle, PC, cosmetics, appliances, ... medical-device
+├── docs/
+│   ├── TOKEN_EFFICIENCY.md            # Why the skill is token-efficient + verification recipe
+│   └── QUALITY_MODEL.md               # Schemas + adversarial verify + per-dimension confidence
 └── examples/                          # Three fully worked sample reports
     ├── bicycle-gravel-upgrade.md
     ├── pc-1440p-gaming-build.md

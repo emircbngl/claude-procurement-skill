@@ -141,19 +141,37 @@ Extract: which brands hold up at 2+ years; which sub-categories have reliability
 
 ---
 
-After all 8 categories complete (~20–30 calls), proceed to save the pack with `confidence: medium` (not low — deep search done).
+After all 8 categories complete (~20–30 calls), run adversarial verification (next), then score and save.
+
+## Adversarial verification of high-stakes dimensions
+
+Before saving, **verify the high-stakes dimensions** — `compatibility`, `standards-regulators`, `compliance-recall` — per `references/adversarial-verify.md`. These are the dimensions where a wrong claim causes a "won't fit" or "isn't legal" failure, and they must survive an independent attempt to refute them before the pack trusts them.
+
+- Extract the 3–8 highest-stakes claims from those dimensions (e.g., "X mount fits Y", "CE + <national mark> required for sale", "no active recall on the current model line").
+- Run the refutation pass (Route A: delegate to `deep-research` with the refutation prompt; Route B: inline skeptic pass with independent sources).
+- Each claim gets a verdict (`verified` / `partially-verified` / `refuted` / `unverified`) per `schemas.md` §4.
+- `refuted` claims are corrected or removed; `unverified` high-stakes claims are flagged and cap their dimension at `low`.
+
+## Score per-dimension confidence
+
+Assign each of the 9 dimensions a confidence (`low`/`medium`/`high`) using the rubric in `schemas.md` §3:
+- High-stakes dimensions: scored partly by the verification verdicts above.
+- Other dimensions: scored by source count + authority (≥2 authoritative → high; 1 authoritative → medium; weak/single → low).
+- Compute the **aggregate** `confidence` from the per-dimension map using the weighted-floor rule (`schemas.md` §3) — do not hand-pick it. Any high-stakes dimension at `low` forces aggregate `low`.
 
 ## Save the derived pack to disk (self-feeding)
 
-After all 8 deep-search categories complete:
+After verification + scoring:
 
 1. Compute a slug from the category: `<category>` → kebab-case (e.g., "espresso machine" → `espresso-machine`).
 2. Check `domain-index.md` for keyword overlap with existing packs (avoid duplicates).
-3. Write the new pack to `references/domain-<slug>.md` using the auto-generated template (below).
-4. Append a row to `references/domain-index.md` with the new pack's keywords + `status: auto-gen, confidence: medium`.
-5. Note in the research report: "Created new domain pack: `references/domain-<slug>.md` (auto-generated via deep search, confidence: medium). Subsequent runs on this category will skip dimension research and use the saved pack."
+3. Write the new pack to `references/domain-<slug>.md` using the auto-generated template (below) — including the `dimension-confidence` map, the `verification` map, the standards-table "Verified?" column, and the closing "## Dimension confidence" section. Run the `schemas.md` self-validation checklist before writing.
+4. Append a row to `references/domain-index.md` with the new pack's keywords + `status: auto-gen` + the computed aggregate `confidence`.
+5. Note in the research report: "Created new domain pack: `references/domain-<slug>.md` (auto-generated via deep search; aggregate confidence: `<computed>`; high-stakes dimensions adversarially verified). Subsequent runs on this category will skip dimension research and reuse the saved pack."
 
 ### Auto-generated pack template
+
+Full schema in `references/schemas.md` §1. The shape:
 
 ```markdown
 ---
@@ -162,59 +180,82 @@ derived-from-query: "<verbatim user query that triggered this>"
 first-run-date: <YYYY-MM-DD>
 last-updated: <YYYY-MM-DD>
 run-count: 1
-confidence: medium
+confidence: <aggregate computed from dimension-confidence per schemas.md §3>
+dimension-confidence:
+  buying-guides: <low|medium|high>
+  standards-regulators: <low|medium|high>
+  brand-landscape: <low|medium|high>
+  pitfalls-failure-modes: <low|medium|high>
+  repairability-eol: <low|medium|high>
+  compliance-recall: <low|medium|high>
+  tco-drivers: <low|medium|high>
+  long-term-reviews: <low|medium|high>
+  compatibility: <low|medium|high>
 deep-search-completed: true
+acquired-via: <inline | deep-research-delegation>
 search-categories-covered:
   - buying-guides
   - standards-regulators
   - brand-landscape
   - pitfalls-failure-modes
   - repairability-eol
-  - compliance-recall-registries
+  - compliance-recall
   - tco-drivers
   - long-term-reviews
+verification:
+  "<high-stakes claim>": { verdict: <verified|partially-verified|refuted|unverified>, confidence: <low|medium|high>, sources: [<url>, <url>] }
 sources-used:
   - <url 1>
-  - <url 2>
-  - ...
+  - <~15–25 URLs across the 8 categories>
 human-reviewed: false
 ---
 
 # Domain: <Category Name> (auto-generated, deep search)
 
 > ℹ **Auto-generated pack** — derived from a comprehensive 8-category deep search
-> on first encounter with this category. Treat as a working reference;
-> human review can promote to `confidence: high` and remove this banner.
-> For purchase decisions involving regulatory or safety claims, verify against
-> the sources listed at the bottom of this file.
+> on first encounter with this category. High-stakes dimensions were adversarially
+> verified. Treat as a working reference; human review can promote to confidence: high
+> and remove this banner. (If aggregate confidence is `low`, use ⚠ and name the weak dimension.)
 
 ## Research dimensions
-- functional_specs: [list extracted from WebSearch 1]
-- quality_signals: [extracted reviews / MTBF / owner-satisfaction signals]
+- functional_specs: [from category 1]
+- quality_signals: [reviews / MTBF / owner-satisfaction]
 - economic: [price tiers, consumables, typical lifespan]
-- usage_fit: [profiles extracted from WebSearch 1]
+- usage_fit: [profiles from category 1]
 
 ## Required user inputs (overrides universal)
 - [category-specific inputs derived from buying guides]
 
 ## Standards & compatibility axes
 
-| Axis | Values | Compat rule |
-|------|--------|-------------|
-| [from WebSearch 2; may be empty if standalone product] | | |
+| Axis | Values | Compat rule | Verified? |
+|------|--------|-------------|-----------|
+| [from category 2; may be empty if standalone product] | | | <verified/unverified/refuted> |
 
 ## Common pitfalls / failure modes
-[from WebSearch 3]
+[from category 4]
 
 ## Regional notes
-[anything region-specific surfaced during derivation — major regional brands, distribution differences, regulatory variation. Otherwise: "Not derived — refine on next run with user's region context."]
+[region-specific brands, distribution, regulatory variation. Otherwise: "Not derived — refine on next run with user's region context."]
 
 ## B2B variant
 [if category has a B2B dimension; otherwise: "B2C-dominant category" or "B2B-dominant category"]
 
 ## Trusted sources for web fallback
+[the actual URLs surfaced across the 8 categories — typically 15–25 URLs]
 
-[the actual URLs surfaced across the 8 deep-search categories — typically 15–25 URLs]
+## Dimension confidence
+| Dimension | Confidence | Basis |
+|-----------|-----------|-------|
+| buying-guides | <score> | <n authoritative sources / notes> |
+| standards-regulators | <score> | <verification verdict + sources> |
+| compatibility | <score> | <verification verdict + sources> |
+| compliance-recall | <score> | <verification verdict + sources> |
+| brand-landscape | <score> | <basis> |
+| pitfalls-failure-modes | <score> | <basis> |
+| repairability-eol | <score> | <basis> |
+| tco-drivers | <score> | <basis> |
+| long-term-reviews | <score> | <basis> |
 ```
 
 ## Standard pipeline still runs

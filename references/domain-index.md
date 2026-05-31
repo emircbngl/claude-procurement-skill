@@ -4,6 +4,8 @@ Authoritative list of available domain packs. The skill consults this on **step 
 
 When adding a domain pack: append a row. When the skill writes a new auto-generated pack, it must also append the entry here.
 
+The **Status** column shows `hand` (human-authored) or `auto-gen` (deep-search-derived) + the pack's **aggregate** confidence. **Per-dimension confidence** (9 dimensions, each scored `low`/`medium`/`high`) lives inside each pack's frontmatter — see `references/schemas.md` §3. Hand-authored packs are implicitly `high` across all dimensions.
+
 | Domain | Pack file | Keywords (lowercase, partial-match) | Status | Mode bias |
 |---|---|---|---|---|
 | Bicycle | `domain-bicycle.md` | bicycle, bike, mtb, gravel, road bike, drivetrain, derailleur, bb, cassette, hub, e-bike (bicycle context), saddle, frame, fork, chainring | hand | B2C |

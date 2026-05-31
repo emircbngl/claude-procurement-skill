@@ -6,13 +6,15 @@ Run this **only when** intent = upgrade OR the user has stated existing ecosyste
 
 ## The compatibility matrix
 
-Build a table that crosses **existing parts** (from step 3 context extraction) against **candidate parts** (from step 5 RFI).
+Build a table that crosses **existing parts** (from step 3 context extraction) against **candidate parts** (from step 5 RFI). Each row follows the schema in `schemas.md` §6.
 
-| Existing part | Candidate | Standard / axis | Compatible? | Notes / source |
-|---|---|---|---|---|
-| Giant Revolt frame, BSA BB, 142×12 thru-axle, flat-mount brakes | Hunt 4-Season Disc wheelset, Centerlock, 142×12 | Hub spacing + rotor mount | ✓ | Matches both axle width and rotor standard |
-| 11sp 105 R7000 shifter | SRAM XPLR 1×12 derailleur | Drivetrain speed + shifter/derailleur protocol | ✗ blocker | Shimano 11sp shifters do not pull SRAM 12sp ratio |
-| AM4 cooler with original bracket | AM5 CPU | Cooler bracket | ⚠ adapter | Some AM4 coolers reuse with adapter; verify per cooler model |
+| Existing part | Candidate | Standard / axis | Compatible? | Verified? | Notes / source |
+|---|---|---|---|---|---|
+| Giant Revolt frame, BSA BB, 142×12 thru-axle, flat-mount brakes | Hunt 4-Season Disc wheelset, Centerlock, 142×12 | Hub spacing + rotor mount | ✓ | verified | Matches both axle width and rotor standard |
+| 11sp 105 R7000 shifter | SRAM XPLR 1×12 derailleur | Drivetrain speed + shifter/derailleur protocol | ✗ blocker | verified | Shimano 11sp shifters do not pull SRAM 12sp ratio |
+| AM4 cooler with original bracket | AM5 CPU | Cooler bracket | ⚠ adapter | unverified | Some AM4 coolers reuse with adapter; verify per cooler model |
+
+The **Verified?** column is populated by adversarial verification (below) for strategic-class purchases; for routine/leverage it stays blank or `n/a`.
 
 ## Three compatibility verdicts
 
@@ -32,6 +34,17 @@ Per axis, use this priority:
 
 **Citation rule**: standards/compat claims require **≥2 independent sources** before going in the report.
 
+## Adversarial verification (strategic-class)
+
+For strategic-class purchases, a compatibility verdict is too expensive to get wrong in either direction — a false `compatible` makes the user buy something that doesn't fit; a false `blocker` makes them skip a valid option. So **adversarially verify every matrix row** per `references/adversarial-verify.md`:
+
+- For each row, run a refutation pass: search for evidence the verdict is *wrong* (for a `compatible` row, look for reports it *doesn't* fit; for a `blocker` row, look for an adapter or exception that makes it work).
+- Apply the **conditionality lens** especially — "compatible, but only with a firmware update / specific revision / adapter" is the most common trap.
+- Set the row's `verified` field: `verified` (survived refutation), `refuted` (verdict was wrong — flip it), or `unverified` (couldn't independently confirm — flag in report, treat cautiously).
+- A `refuted` verdict flips the row and is logged; an `unverified` high-stakes row surfaces in the report's Open Questions.
+
+For routine/leverage purchases, single-pass with ≥2 sources is sufficient — no separate refutation pass needed.
+
 ## Common multi-axis pitfalls
 
 Some candidates pass a single-axis check but fail at the system level:
@@ -45,4 +58,4 @@ For each candidate, walk the **full chain** of axes from the domain pack, not ju
 
 ## Output
 
-The completed matrix goes into the report's "Compliance & validation → Compatibility matrix" section. Every blocker becomes a Do-Not-Buy reason. Every adapter becomes a TCO line item.
+The completed matrix goes into the report's "Compliance & validation → Compatibility matrix" section. Every blocker becomes a Do-Not-Buy reason. Every adapter becomes a TCO line item. For strategic-class, the `verified` column travels with the matrix, and any `unverified` row is also listed in Section 16 (Open questions — verify before purchase).

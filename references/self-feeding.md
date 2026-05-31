@@ -66,6 +66,8 @@ The skill never goes back to the internet to **re-derive criteria** for a known 
 
 Same skeleton as hand-authored packs (`domain-<name>.md`), but with a frontmatter marker so the skill (and human reviewers) can tell them apart:
 
+Same skeleton as hand-authored packs, plus the v1.3 frontmatter. The full schema is in `references/schemas.md` §1; this is the shape:
+
 ```markdown
 ---
 status: auto-generated
@@ -73,12 +75,24 @@ derived-from-query: "<user's original query>"
 first-run-date: 2026-05-28
 last-updated: 2026-05-28
 run-count: 1
-confidence: medium
+confidence: medium          # AGGREGATE — computed from dimension-confidence per schemas.md §3, not hand-picked
+dimension-confidence:
+  buying-guides: high
+  standards-regulators: high
+  brand-landscape: medium
+  pitfalls-failure-modes: medium
+  repairability-eol: medium
+  compliance-recall: high
+  tco-drivers: medium
+  long-term-reviews: low
+  compatibility: high
 deep-search-completed: true
-acquired-via: <inline | deep-research-delegation>  # Path B vs Path A
-search-categories-covered: [buying-guides, standards-regulators, brand-landscape, pitfalls-failure-modes, repairability-eol, compliance-recall-registries, tco-drivers, long-term-reviews]
+acquired-via: <inline | deep-research-delegation>   # Path B vs Path A (domain-unknown.md)
+search-categories-covered: [buying-guides, standards-regulators, brand-landscape, pitfalls-failure-modes, repairability-eol, compliance-recall, tco-drivers, long-term-reviews]
+verification:                # adversarial-verify results for high-stakes claims (adversarial-verify.md)
+  "<high-stakes claim 1>": { verdict: verified, confidence: high, sources: [url, url] }
+  "<high-stakes claim 2>": { verdict: unverified, confidence: low, sources: [] }
 sources-used:
-  - https://...
   - https://...
   - <~15–25 URLs from the 8 deep-search categories>
 human-reviewed: false
@@ -88,24 +102,29 @@ human-reviewed: false
 
 > ℹ **Auto-generated pack** — derived from a comprehensive 8-category deep search
 > on first encounter with this category. Treat as a working reference;
-> human review can promote to `confidence: high` and remove this banner.
+> human review can promote to confidence: high and remove this banner.
 > For purchase decisions involving regulatory or safety claims, verify against
 > the sources listed at the bottom of this file.
+> (If aggregate confidence is `low`, the banner uses ⚠ and names the weak dimension.)
 
-[rest of file follows the standard domain-pack template — see domain-bicycle.md
-or domain-pc.md as the canonical reference]
+[body sections per schemas.md §1 — including the standards table with a "Verified?"
+column and a closing "## Dimension confidence" table that mirrors the frontmatter map]
 ```
 
-## Confidence levels
+## Confidence model — per-dimension, not blanket
 
-Track per pack:
-- **`low`** — derivation failed (deep search didn't complete cleanly); pack saved with user-supplied dimensions as a fallback. Report should warn user.
-- **`medium`** — deep search completed (default for auto-generated packs); or hand-authored without explicit review. Refined across uses.
-- **`high`** — `human-reviewed: true` flag set by user after review.
+**As of v1.3, confidence is scored per dimension, not as a single flat label.** A pack can have rock-solid standards data and thin long-term-review data; one blanket score hides that. The full model — scoring rubric, the 9 dimension keys, and the aggregate-computation rule — lives in `references/schemas.md` §3. Summary:
 
-The skill should:
-- Cite low-confidence packs with a warning in the report ("Note: domain pack for X is auto-generated and the deep search did not complete cleanly; verify critical claims independently.")
-- Treat medium and high confidence as equivalent for runtime decisions — no warning needed in reports.
+- Each of the 9 dimensions (`buying-guides`, `standards-regulators`, `brand-landscape`, `pitfalls-failure-modes`, `repairability-eol`, `compliance-recall`, `tco-drivers`, `long-term-reviews`, `compatibility`) gets `low` / `medium` / `high`.
+- High-stakes dimensions (`compatibility`, `compliance-recall`, `standards-regulators`) are scored partly by **adversarial verification** — see `references/adversarial-verify.md`. A high-stakes claim that an independent skeptic pass can't corroborate caps that dimension at `low`.
+- The frontmatter `confidence` field is the **aggregate**, computed by the weighted-floor rule in `schemas.md` §3 — not hand-picked. Any high-stakes dimension at `low` forces aggregate `low`.
+
+The skill should, at report time:
+- If aggregate is `low`, or any **high-stakes** dimension is `low`, name the specific weak dimension in the report ("Note: compatibility data for this category is low-confidence — verify the fit independently before buying") rather than a blanket warning.
+- If aggregate is `medium`/`high` with all high-stakes dimensions ≥ `medium`, no warning needed.
+- Always surface `refuted`/`unverified` high-stakes claims in the report's Open Questions section.
+
+Hand-authored packs without a `dimension-confidence` map are treated as `high` across all dimensions (human-curated) — no retrofit needed.
 
 ## Update / refinement on subsequent runs
 

@@ -8,7 +8,7 @@ If `tasks/research/<slug>.md` already exists, **append a new `## Re-evaluation <
 
 ```markdown
 # <Product / Research Question>
-> Generated: <date> · Region: <region> · Budget: <range+currency> · Use case: <summary> · Audience: <casual|pro> · Intent: <new-purchase|upgrade|comparison|compat-check> · Kraljic class: <routine|leverage|bottleneck|strategic>
+> Generated: <date> · Region: <region> · Budget: <range+currency> · Use case: <summary> · Audience: <casual|pro> · Intent: <new-purchase|upgrade|comparison|compat-check> · Kraljic class: <routine|leverage|bottleneck|strategic> · Pack confidence: <aggregate — only when an auto-generated pack was used>
 
 ## Executive summary (Casual TL;DR)
 - **Verdict**: <one-line recommendation + target price + best channel>
@@ -62,9 +62,11 @@ What was pulled from working-directory files: existing gear, prior quotes, prior
 
 **Compatibility matrix** (only if upgrade or existing-ecosystem):
 
-| Existing part | Candidate | Standard | Compatible? | Notes |
-|---|---|---|---|---|
-| ... | ... | ... | ✓ / ⚠ / ✗ | source |
+| Existing part | Candidate | Standard | Compatible? | Verified? | Notes |
+|---|---|---|---|---|---|
+| ... | ... | ... | ✓ / ⚠ / ✗ | verified / unverified / refuted (strategic-class) | source |
+
+**Verification status** (strategic-class): high-stakes compatibility + compliance claims that were adversarially verified — `verified` claims stand; `refuted` claims were corrected; `unverified` claims are flagged and repeated in Section 16. See `references/adversarial-verify.md`.
 
 **Disqualified candidates** + reason.
 
