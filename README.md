@@ -129,7 +129,7 @@ The same pipeline serves both personal buyers and corporate procurement. See [re
 One of the strongest reasons to use this skill over asking Claude directly: **structural token efficiency that compounds across sessions**.
 
 - **Progressive disclosure** — `SKILL.md` is ~180 lines; the 30+ reference modules load only when relevant. A routine-class run pulls 3 files into context; a strategic-class run pulls 6.
-- **Self-feeding (criteria-side caching)** — first encounter with an unknown category runs a one-time deep search (~20–30 web calls across 8 categories); the result is saved as a domain pack with `confidence: medium`. Subsequent runs on the same category cost **zero web calls for criteria research** — only live price discovery + availability is re-fetched.
+- **Self-feeding (criteria-side caching)** — first encounter with an unknown category runs a one-time deep search across 8 dimensions; result saved as a domain pack with `confidence: medium`. Two acquisition paths: (a) delegate to the `deep-research` skill if registered in your Claude Code setup (preferred — fan-out + adversarial verify), or (b) inline 8-category search with parallel-batched WebSearch/WebFetch calls (~20–30 calls) as fallback. Subsequent runs on the same category cost **zero web calls for criteria research** — only live price discovery + availability is re-fetched.
 - **Auto-extraction** — the skill scans the working directory for existing context (gear lists, prior quotes, prior research) before asking the user anything. Repeated research in the same domain compounds.
 - **Compressed report template** — tables instead of paragraphs; casual mode condenses sections; the canonical Markdown is dense but scannable.
 

@@ -1,6 +1,11 @@
 # Self-feeding: skill learns its own domain packs over time
 
-The skill starts with a finite set of `domain-<name>.md` packs. Every time it researches a category that doesn't have a pack, it runs an **8-category deep search** (~20–30 web calls) and saves the result as a new `domain-<name>.md`. **Self-feeding** means future runs on that category reuse the saved pack and skip dimension research entirely.
+The skill starts with a finite set of `domain-<name>.md` packs. When it researches a category that doesn't have a pack, it acquires the criteria-side knowledge in one of two ways:
+
+- **Path A (preferred)**: delegate to the `deep-research` skill (if registered) — composite 8-dimension prompt, returns cited synthesis.
+- **Path B (fallback)**: inline 8-category deep search (~20–30 web calls) with parallel-batched tool calls per category.
+
+Either way, the result is saved as a new `domain-<name>.md`. **Self-feeding** means future runs on that category reuse the saved pack and skip dimension research entirely.
 
 This turns the skill into a knowledge base that grows with use — without any human-author intervention required.
 
@@ -70,6 +75,7 @@ last-updated: 2026-05-28
 run-count: 1
 confidence: medium
 deep-search-completed: true
+acquired-via: <inline | deep-research-delegation>  # Path B vs Path A
 search-categories-covered: [buying-guides, standards-regulators, brand-landscape, pitfalls-failure-modes, repairability-eol, compliance-recall-registries, tco-drivers, long-term-reviews]
 sources-used:
   - https://...

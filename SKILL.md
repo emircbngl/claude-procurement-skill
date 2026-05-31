@@ -15,7 +15,7 @@ description: >
   "build me a [PC/bike/setup] for [budget]", "evaluate [product] for [use case]",
   "TCO of [product]", "procurement analysis for [product]", "RFP for [category]",
   "vendor comparison for [SaaS/equipment]".
-allowed-tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, AskUserQuestion
+allowed-tools: Read, Write, Edit, Glob, Grep, WebSearch, WebFetch, AskUserQuestion, Skill
 ---
 
 # procurement
@@ -71,7 +71,11 @@ Also at this step, infer or ask **mode**: B2C (default for personal language) or
 
 **1.5. Kraljic classification** — see `references/kraljic-classification.md`. Place purchase on supply-risk × importance matrix: routine / leverage / bottleneck / strategic. The classification dictates how deep the rest of the steps go.
 
-**2. Load playbooks.** Read `references/procurement-playbook.md` + `references/universal-dimensions.md` + the matched `references/domain-<name>.md` from step 1. If mode = B2B, also read `references/b2b-modifiers.md`. If domain was `unknown`, follow `references/domain-unknown.md` to run an **8-category deep search (~20–30 web calls on criteria-side knowledge only)** AND **save the derived pack** to `references/domain-<slug>.md` with `confidence: medium` + append entry to `domain-index.md` (self-feeding — see `references/self-feeding.md`). Note: prices and current availability are intentionally never cached — step 6 always runs live. Cache derived dimensions for this run.
+**2. Load playbooks.** Read `references/procurement-playbook.md` + `references/universal-dimensions.md` + the matched `references/domain-<name>.md` from step 1. If mode = B2B, also read `references/b2b-modifiers.md`. If domain was `unknown`, follow `references/domain-unknown.md` to acquire the criteria-side knowledge:
+- **Path A (preferred when available)**: delegate to the `deep-research` skill via the Skill tool with a composite 8-category prompt; parse its cited synthesis into the domain-pack template.
+- **Path B (fallback)**: run the inline 8-category deep search (~20–30 web calls) with **parallel-batched WebSearch/WebFetch calls per category** (multiple tool calls per turn).
+
+Either path saves the result as `references/domain-<slug>.md` with `confidence: medium` + appends to `domain-index.md` (self-feeding — see `references/self-feeding.md`). Note: prices and current availability are intentionally never cached — step 6 always runs live. Cache derived dimensions for this run.
 
 **3. Auto-extract context.** Glob `**/*.md`, `**/*.txt`, `**/notes/**` + loose files in `.`. Grep for product names, model numbers, existing gear, prior quotes, must-haves/dealbreakers, prior research in `tasks/research/`. Build `known_context`. **Never re-ask for anything already found.**
 

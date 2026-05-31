@@ -10,13 +10,68 @@ Step 1 maps the product to a domain by consulting `domain-index.md`. If no match
 
 Examples that hit this path on first encounter: drones, 3D printers, espresso machines (dedicated tier beyond small-appliance), watches, baby products, supplements, solar panels, niche professional gear.
 
-## Discovery workflow — DEEP SEARCH
+## Discovery routing
 
-Run a comprehensive **8-category deep search** (~20–30 WebSearch + WebFetch calls total) to capture the stable knowledge about this category so the saved pack is authoritative on first encounter. Subsequent runs on this category reuse the pack and skip dimension research entirely.
+Two paths to acquire the criteria-side knowledge. Choose Path A when available; fall back to Path B otherwise.
 
-**Critical scope clarification**: this deep search captures **criteria-side knowledge** only — what the category is, what specs matter, what standards apply, what brands exist, what fails. It does **NOT** capture prices, current stock, or current promos. Those are dynamic and would go stale immediately; step 6 (price discovery) re-runs live every query and is intentionally not cached.
+### Path A — Delegate to `deep-research` skill (preferred when available)
 
-For each category below, run 1–3 WebSearch queries to identify the best sources, then WebFetch the top 3–5 authoritative sources for full content. Save every URL into the pack's `sources-used:` frontmatter.
+If the `deep-research` skill is registered in the current Claude Code setup (check the available-skills list for an entry named exactly `deep-research`), delegate the criteria-side research to it via the Skill tool. Rationale: `deep-research` already implements proper fan-out + adversarial verification + cited synthesis — reusing it beats re-implementing it.
+
+**Invocation**:
+
+```
+Skill(skill="deep-research", args="<composite-prompt below>")
+```
+
+**Composite prompt template** (substitute `<category>` and the user's region):
+
+```
+Research <category> for procurement purposes. Cover ALL 8 of the following dimensions,
+with cited sources for each. Do NOT cover prices, current stock, or current promos —
+those will be re-fetched live elsewhere and would go stale.
+
+1. Buying-guide spec dimensions — 4–8 functional specs experts use to differentiate
+   products in this category; common use-case profiles (beginner / enthusiast / pro);
+   tier breakpoints (entry / mid / premium / flagship) with anchored price ranges.
+
+2. Standards + regulatory bodies — ISO / IEC / IEEE / EN standards; physical interfaces,
+   connectors, protocols; required certification marks per major region
+   (CE, FCC, UL, RoHS, CCC, PSE, KC, RCM, BIS, INMETRO, regional national marks).
+
+3. Brand landscape across regions — 5–10 dominant brands globally; per-region distinction
+   (which brands strong in US / EU / UK / CA / AU / JP / IN / BR / MENA / other);
+   authorized-distribution patterns (DTC vs dealer network).
+
+4. Common pitfalls + failure modes — 8–12 known failure patterns from long-term-ownership
+   reviews and repair-shop sources; brand-reliability signals; industry-wide design flaws.
+
+5. Repairability + EOL — iFixit-style scores if available; modular-vs-sealed norms;
+   manufacturer right-to-repair posture; standard EOL routes (resale, trade-in, recycle).
+
+6. Compliance / safety / recall registries — per-region recall-monitoring URLs
+   (CPSC SaferProducts.gov, EU RAPEX, MHRA, TGA, Health Canada, national equivalents);
+   recent high-profile recalls in the category; category-specific safety-cert hierarchy.
+
+7. TCO drivers — consumables with replacement cadence; energy spec range
+   (watts, kWh/yr); typical maintenance schedule; expected lifespan in years.
+
+8. Long-term ownership signals — which brands hold up at 2+ years; sub-categories with
+   reliability problems; aesthetic / ergonomic regret patterns.
+
+Output format: 8 numbered sections, each with bulleted findings and cited URLs.
+User region context: <region>
+```
+
+When `deep-research` returns its synthesis, parse it into the auto-generated domain-pack template (see "Save the derived pack to disk" below). Frontmatter: `confidence: medium`, `deep-search-completed: true`, `delegated-to: deep-research`, `sources-used:` populated from the synthesis's citations.
+
+### Path B — Inline 8-category deep search (fallback)
+
+When `deep-research` is not registered, run the 8-category deep search inline (~20–30 WebSearch + WebFetch calls total). **Use parallel-batched tool calls per category** — Claude supports multiple tool calls per turn, so issue 3–5 WebSearch / WebFetch calls in one message rather than sequential one-per-turn. Per category, identify the best 3–5 sources via WebSearch then WebFetch them in parallel for full content extraction.
+
+**Critical scope clarification (applies to both paths)**: this deep search captures **criteria-side knowledge** only — what the category is, what specs matter, what standards apply, what brands exist, what fails. It does **NOT** capture prices, current stock, or current promos. Those are dynamic and would go stale immediately; step 6 (price discovery) re-runs live every query and is intentionally not cached.
+
+The 8 categories of Path B follow:
 
 ### Category 1: Buying guides + spec dimensions (3–5 sources)
 
